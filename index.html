@@ -6,8 +6,8 @@
     <title>Entrenador Eléctrico | Chile</title>
     <script src="preguntas.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #cccccc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        .app-container { background-color: #252526; padding: 30px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); max-width: 600px; width: 90%; border-top: 4px solid #007acc; max-height: 90vh; overflow-y: auto; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #cccccc; display: flex; justify-content: center; align-items: center; min-height: 100vh; min-height: 100dvh; margin: 0; padding: 15px; box-sizing: border-box; }
+        .app-container { background-color: #252526; padding: 25px; border-radius: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.5); max-width: 600px; width: 100%; border-top: 4px solid #007acc; max-height: 90vh; max-height: 85dvh; overflow-y: auto; box-sizing: border-box; }
         h1 { color: #ffffff; font-size: 24px; text-align: center; margin-bottom: 25px; }
         h2 { color: #a8e6cf; font-size: 18px; text-align: center; margin-bottom: 20px; }
         .screen { display: none; }
@@ -161,6 +161,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDPJlUjSAHURvO_llfpYGtWkRlfEo63JxY",
@@ -174,6 +175,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const analytics = getAnalytics(app);
 
         let preguntasDelTest = [];
         let preguntaActual = 0;
