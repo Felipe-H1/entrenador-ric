@@ -56,12 +56,37 @@
 
         .leaderboard-select { padding: 10px; background: #1e1e1e; color: white; border: 1px solid #007acc; border-radius: 4px; width: 100%; margin-bottom: 20px; font-size: 16px; font-weight: bold; text-align: center; }
 
-        /* Marca de agua */
-        .watermark { position: fixed; bottom: 10px; right: 15px; color: #555555; font-size: 12px; font-style: italic; pointer-events: none; user-select: none; z-index: 1000; }
+        /* --- NUEVO: Estilos Marca de Agua Apilada y Modal de Sugerencias --- */
+        .watermark-container { position: fixed; bottom: 10px; right: 15px; text-align: right; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .sugerencias-btn { color: #888; font-size: 13px; cursor: pointer; text-decoration: underline; text-decoration-style: dotted; transition: 0.2s; user-select: none; }
+        .sugerencias-btn:hover { color: #f39c12; }
+        .watermark-text { color: #555555; font-size: 12px; font-style: italic; user-select: none; pointer-events: none; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: #252526; padding: 20px; border-radius: 8px; width: 100%; max-width: 400px; border: 1px solid #444; box-shadow: 0 10px 25px rgba(0,0,0,0.8); text-align: left; }
+        .modal-content textarea { width: 100%; background: #1e1e1e; color: white; border: 1px solid #007acc; border-radius: 4px; padding: 12px; font-family: inherit; font-size: 14px; box-sizing: border-box; resize: vertical; margin-bottom: 15px; }
     </style>
 </head>
 <body>
-    <div class="watermark">Desarrollado por Felipe H.</div>
+    
+    <!-- NUEVO: Marca de agua con botón de sugerencias integrado -->
+    <div class="watermark-container">
+        <span class="sugerencias-btn" onclick="abrirSugerencias()">💡 Sugerencias</span>
+        <div class="watermark-text">Desarrollado por Felipe H.</div>
+    </div>
+
+    <!-- NUEVO: Ventana flotante (Modal) para enviar sugerencias -->
+    <div id="modal-sugerencias" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:#a8e6cf; text-align: center;">💡 Enviar Sugerencia</h3>
+            <p style="font-size: 14px; color:#aaa; text-align: center;">¿Falta alguna pregunta? ¿Encontraste un error? Déjame tu comentario:</p>
+            <textarea id="texto-sugerencia" placeholder="Escribe aquí tu sugerencia o corrección..." rows="4"></textarea>
+            <div style="display: flex; gap: 10px;">
+                <button class="menu-btn" style="background-color: transparent; border-color: #888; color: #888; margin: 0; padding: 10px;" onclick="cerrarSugerencias()">Cancelar</button>
+                <button id="btn-enviar-sug" class="menu-btn" style="background-color: #007acc; margin: 0; padding: 10px;" onclick="enviarSugerenciaFirebase()">Enviar</button>
+            </div>
+        </div>
+    </div>
 
     <div class="app-container">
         <div id="screen-main" class="screen active">
@@ -366,7 +391,6 @@
             else iniciarTestPersonalizado();
         }
 
-        // --- FUNCIONES CLAVE DE FIREBASE EN LA NUBE ---
         async function subirPuntajeFirebase() {
             const nameInput = document.getElementById("player-name");
             const name = nameInput.value.trim();
@@ -387,7 +411,7 @@
                 verLeaderboard(modoID);
             } catch (error) {
                 console.error(error);
-                alert("Error al conectar con la nube. Asegúrate de estar en Modo de Prueba.");
+                alert("Error al conectar con la nube. Asegúrate de estar conectado a internet.");
             }
         }
 
@@ -452,6 +476,45 @@
             return arr.sort((a, b) => b.puntaje - a.puntaje);
         }
 
+        /* --- NUEVO: Funciones para el Modal de Sugerencias --- */
+        function abrirSugerencias() {
+            document.getElementById("modal-sugerencias").style.display = "flex";
+            document.getElementById("texto-sugerencia").value = "";
+        }
+
+        function cerrarSugerencias() {
+            document.getElementById("modal-sugerencias").style.display = "none";
+        }
+
+        async function enviarSugerenciaFirebase() {
+            const texto = document.getElementById("texto-sugerencia").value.trim();
+            if(!texto) { 
+                alert("¡Escribe algo antes de enviar!"); 
+                return; 
+            }
+
+            const btnEnviar = document.getElementById("btn-enviar-sug");
+            btnEnviar.innerText = "Enviando...";
+            btnEnviar.disabled = true;
+
+            try {
+                // Guarda en una nueva colección llamada "sugerencias"
+                await addDoc(collection(db, "sugerencias"), {
+                    mensaje: texto,
+                    fecha: new Date().toISOString()
+                });
+                alert("¡Sugerencia enviada! Muchas gracias por ayudar a mejorar la app.");
+                cerrarSugerencias();
+            } catch (error) {
+                console.error(error);
+                alert("Hubo un error al enviar. Intenta de nuevo.");
+            } finally {
+                btnEnviar.innerText = "Enviar";
+                btnEnviar.disabled = false;
+            }
+        }
+
+        // Exponer funciones nuevas a la ventana global (necesario por el type="module")
         window.showScreen = showScreen;
         window.recalcularMaximoPreguntas = recalcularMaximoPreguntas;
         window.iniciarTestAleatorioRIC = iniciarTestAleatorioRIC;
@@ -464,6 +527,10 @@
         window.subirPuntajeFirebase = subirPuntajeFirebase;
         window.verLeaderboard = verLeaderboard;
         window.cambiarModoLeaderboard = cambiarModoLeaderboard;
+        
+        window.abrirSugerencias = abrirSugerencias;
+        window.cerrarSugerencias = cerrarSugerencias;
+        window.enviarSugerenciaFirebase = enviarSugerenciaFirebase;
     </script>
 </body>
 </html>
